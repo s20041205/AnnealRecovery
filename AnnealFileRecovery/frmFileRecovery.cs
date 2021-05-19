@@ -10,11 +10,20 @@ using System.Windows.Forms;
 
 namespace AnnealFileRecovery
 {
-    public partial class Form1 : Form
+    public partial class frmFileRecovery : Form
     {
-        public Form1()
+        public frmFileRecovery()
         {
             InitializeComponent();
+        }
+
+        private void frmFileRecovery_Load(object sender, EventArgs e)
+        {
+
+
+
+
+
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace AnnealFileRecovery
 {
-    partial class Form1
+    partial class frmFileRecovery
     {
         /// <summary>
         /// Required designer variable.
@@ -28,9 +28,18 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.components = new System.ComponentModel.Container();
+            this.SuspendLayout();
+            // 
+            // frmFileRecovery
+            // 
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.Text = "Form1";
+            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.Name = "frmFileRecovery";
+            this.Text = "AnnealFileRecovery";
+            this.Load += new System.EventHandler(this.frmFileRecovery_Load);
+            this.ResumeLayout(false);
+
         }
 
         #endregion
