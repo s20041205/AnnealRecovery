@@ -8,4 +8,4 @@
 
 3. Click "Recover" to execute anneal file recovering
 
-![Image of Yaktocat](https://octodex.github.com/images/yaktocat.png)
+![Platform](https://github.com/s20041205/AnnealFileRecovery/blob/master/Debug/img/overview.png)
