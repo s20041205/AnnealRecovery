@@ -113,6 +113,7 @@
             this.Controls.Add(this.btnFolderPath);
             this.Name = "frmFileRecovery";
             this.Text = "AnnealFileRecovery";
+            this.TopMost = true;
             this.Load += new System.EventHandler(this.frmFileRecovery_Load);
             this.ResumeLayout(false);
             this.PerformLayout();

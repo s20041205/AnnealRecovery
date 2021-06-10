@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25420.1
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnnealFileRecovery", "AnnealFileRecovery\AnnealFileRecovery.csproj", "{93E35F94-B8EB-44A3-B9FA-CB6C05885BD0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnnealRecoverPlatform", "AnnealRecoverPlatform\AnnealRecoverPlatform.csproj", "{93E35F94-B8EB-44A3-B9FA-CB6C05885BD0}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
