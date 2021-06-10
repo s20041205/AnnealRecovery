@@ -1,5 +1,6 @@
-# AnnealFileRecovery
+# AnnealFileRecovery <h1>
 
+# Steps<h2>
 1. Click load path "..." and then select a user folder
 → user ID and subfolder listed
 → change subfolder if needed
