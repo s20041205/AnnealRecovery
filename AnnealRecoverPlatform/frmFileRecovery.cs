@@ -57,8 +57,11 @@ namespace AnnealFileRecovery
                 {
                     string path = loadFolderDlg.SelectedPath;
                     UpdateInfo(path);
-                    GetNumberOfAnneals(path);
-                    
+                    string fn = GetNumberOfAnneals(path);
+                    //
+                    //- explore and calculate anneal count
+                    string admit = new DirectoryInfo(fn).Name;
+                    CalculateAnnealCount(fn, admit);
                 }
                 catch (Exception ex)
                 {
@@ -82,9 +85,10 @@ namespace AnnealFileRecovery
             System.Diagnostics.Debug.Print("txtPath.Text={0} => dir={1}, patnID={2}", txtPath.Text, dir, patnID);
         }
         //
-        private void GetNumberOfAnneals(string path = null)
+        private string GetNumberOfAnneals(string path = null)
         {
-            if (string.IsNullOrEmpty(path)) return;
+            string fn = string.Empty;
+            if (string.IsNullOrEmpty(path)) return fn;
             //[List admits]
             List<string> lst = new List<string>();
             if (Directory.Exists(path))
@@ -103,25 +107,36 @@ namespace AnnealFileRecovery
                     lstAdmits.Add(lst[i]);
                 }
             }
-            if (lstAdmits == null) return;
+            if (lstAdmits == null) return fn;
 
             //[Select one admit]
             AddAdmitsToComboBox(lstAdmits);
             //TODO: to select: cmbAdmit select item changed
             //if lstAdmits.Count > 1 => choose one to explore
-            //- explore and count how many anneals
-            string admit = new DirectoryInfo(lstAdmits[0]).Name;
 
+            fn = lstAdmits[0];
+            return fn;
+        }
+        private void CalculateAnnealCount(string path, string admit)
+        {
             //[Check event files and find anneal count]
             string patnID = Path.GetFileName(path);
-            string fn = lstAdmits[0];
-            string pathEvt = $"{fn}+\\{patnID}_{admit}.event";
-
-
-
+            string fn = path;
+            string evtOri = $"{fn}+\\{patnID}_{admit}.event";
+            //
+            int n = 1;
+            bool exists = (File.Exists(evtOri));
+            /*while (!exists)
+            {
+                string evt = $"{fn}+\\{patnID}_{admit}.~{n++}event";
+                if (!File.Exists(evt))
+                {
+                    exists = false;
+                }
+            }*/
+            System.Diagnostics.Debug.Print("CalculateAnnealCount={0}",n);
 
         }
-
         private void AddAdmitsToComboBox(List<string> lst)
         {
             if (cmbAdmit == null) return;
