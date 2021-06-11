@@ -69,9 +69,27 @@ namespace AnnealFileRecovery
                 }
             }
         }
+
         private void btnRun_Click(object sender, EventArgs e)
         {
+            //case 1: file_1 anneal count > 1
+            KeyValuePair<string, string> cmb = GetCmbSelectedKeyValue(cmbAdmit);
+            string path = ($"{cmb.Value}\\target.txt");
+            List<string> files = GetAnnealedFilesFromTarget(path);
+             
 
+
+
+        }
+        private KeyValuePair<string, string> GetCmbSelectedKeyValue(ComboBox comboBox)
+        {
+            if (comboBox.SelectedIndex == -1)
+                return new KeyValuePair<string, string>();
+            KeyValuePair<string, string> kvp = (KeyValuePair<string, string>)comboBox.Items[comboBox.SelectedIndex];
+            return kvp;
+        }
+        private void GetAnnealCountFromTargetFile()
+        {
 
 
 
@@ -140,8 +158,8 @@ namespace AnnealFileRecovery
                     exists = false;
                 }
             }
-            System.Diagnostics.Debug.Print("CalculateAnnealCount={0}",n+1);
-            return (n + 1);
+            System.Diagnostics.Debug.Print("CalculateAnnealCount={0}",n);
+            return (n);
         }
         private void AddAdmitsToComboBox(List<string> lst)
         {
@@ -197,5 +215,40 @@ namespace AnnealFileRecovery
             return dt;
         }
         //
+        private List<string> GetAnnealedFilesFromTarget(string fn)
+        {
+            List<string> lst = new List<string>();
+            if (!File.Exists(fn)) return lst;
+            //
+            try
+            {
+                using (FileStream fs = new FileStream(fn, FileMode.Open))
+                {
+                    using (var sr = new StreamReader(fs, Encoding.UTF8))
+                    {
+                        try
+                        {
+                            string line;
+                            while ((line = sr.ReadLine()) != null)
+                            {
+                                lst.Add(line);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            System.Diagnostics.Debug.Print("file reading exception:" + ex);
+                            return lst;
+                        }
+                    }
+                } 
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.Print("file reading exception:" + ex);
+                return lst;
+            }
+            return lst;
+        }
+
     }
 }
