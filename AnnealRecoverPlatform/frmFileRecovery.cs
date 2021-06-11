@@ -61,11 +61,7 @@ namespace AnnealFileRecovery
                     //
                     //- explore and calculate anneal count
                     string admit = new DirectoryInfo(fn).Name;
-<<<<<<< HEAD:AnnealRecoverPlatform/frmFileRecovery.cs
                     int ct = CalculateAnnealCount(fn, admit);
-=======
-                    CalculateAnnealCount(fn, admit);
->>>>>>> 92f6537245a8780508aeea1f5850ca62894e1369:AnnealFileRecovery/frmFileRecovery.cs
                 }
                 catch (Exception ex)
                 {
@@ -121,7 +117,6 @@ namespace AnnealFileRecovery
             fn = lstAdmits[0];
             return fn;
         }
-<<<<<<< HEAD:AnnealRecoverPlatform/frmFileRecovery.cs
         private int CalculateAnnealCount(string path, string admit)
         {
             //[Check event files and find anneal count]
@@ -147,27 +142,6 @@ namespace AnnealFileRecovery
             }
             System.Diagnostics.Debug.Print("CalculateAnnealCount={0}",n+1);
             return (n + 1);
-=======
-        private void CalculateAnnealCount(string path, string admit)
-        {
-            //[Check event files and find anneal count]
-            string patnID = Path.GetFileName(path);
-            string fn = path;
-            string evtOri = $"{fn}+\\{patnID}_{admit}.event";
-            //
-            int n = 1;
-            bool exists = (File.Exists(evtOri));
-            /*while (!exists)
-            {
-                string evt = $"{fn}+\\{patnID}_{admit}.~{n++}event";
-                if (!File.Exists(evt))
-                {
-                    exists = false;
-                }
-            }*/
-            System.Diagnostics.Debug.Print("CalculateAnnealCount={0}",n);
->>>>>>> 92f6537245a8780508aeea1f5850ca62894e1369:AnnealFileRecovery/frmFileRecovery.cs
-
         }
         private void AddAdmitsToComboBox(List<string> lst)
         {
