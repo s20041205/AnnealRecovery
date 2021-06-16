@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
 using System.Text;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Reflection;
 using System.Windows.Forms;
 
 namespace AnnealFileRecovery
@@ -15,21 +14,63 @@ namespace AnnealFileRecovery
         {
             InitializeComponent();
         }
-        private string _root = @"C:\VitalData\[VT-Trace]\";
+        private string _root = @"C:\VitalData\";
         private void frmFileRecovery_Load(object sender, EventArgs e)
         {
+            GetRoot();
             List<string> dirs = ListAllFolder(_root);
             if (dirs != null && dirs.Count > 0)
             {
                 txtPath.Text = dirs[0];
                 UpdateInfo(txtPath.Text);
-                GetNumberOfAnneals(txtPath.Text);
+                GetNumberOfAdmits(txtPath.Text);
             }
             else
             {
                 //
             }
-
+        }
+        //Get root if AnnalRoot.txt exists
+        private void GetRoot()
+        {
+            string fn = GetExePath() + "\\AnnealRoot.txt";
+            if (File.Exists(fn))
+            {
+                string root = "";
+                try
+                {
+                    using (FileStream fs = new FileStream(fn, FileMode.Open))
+                    {
+                        using (var sr = new StreamReader(fs, Encoding.UTF8))
+                        {
+                            try
+                            {
+                                string line;
+                                while ((line = sr.ReadLine()) != null)
+                                {
+                                    root = line;
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                System.Diagnostics.Debug.Print("file reading exception:" + ex);
+                                return;
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.Print("file reading exception:" + ex);
+                    return;
+                }
+                if (!string.IsNullOrEmpty(root))
+                    _root = root;
+            }
+        }
+        private static string GetExePath()
+        {
+            return Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
         }
         private List<string> ListAllFolder(string root)
         {
@@ -57,11 +98,11 @@ namespace AnnealFileRecovery
                 {
                     string path = loadFolderDlg.SelectedPath;
                     UpdateInfo(path);
-                    string fn = GetNumberOfAnneals(path);
+                    string fn = GetNumberOfAdmits(path);
                     //
                     //- explore and calculate anneal count
-                    string admit = new DirectoryInfo(fn).Name;
-                    int ct = CalculateAnnealCount(fn, admit);
+                    /*string admit = new DirectoryInfo(fn).Name;
+                    int ct = CalculateAnnealCountByEvent(fn, admit);*/
                 }
                 catch (Exception ex)
                 {
@@ -69,17 +110,114 @@ namespace AnnealFileRecovery
                 }
             }
         }
-
         private void btnRun_Click(object sender, EventArgs e)
         {
+            //[Step 1]
             //case 1: file_1 anneal count > 1
             KeyValuePair<string, string> cmb = GetCmbSelectedKeyValue(cmbAdmit);
-            string path = ($"{cmb.Value}\\target.txt");
-            List<string> files = GetAnnealedFilesFromTarget(path);
-             
+            string targetpath = ($"{cmb.Value}\\target.txt");
+            List<string> files = GetAnnealedFilesFromTarget(targetpath);
+            
+            //[Step 2] Parse anneals before and after
+            ParseAnneals($"{cmb.Value}", files);
+        }
+        private void ParseAnneals(string fn, List<string> annealList)
+        {
+            if (string.IsNullOrEmpty(fn) || annealList == null || annealList.Count <= 0) return;
+            //[Step 0] Assume current files reflects final anneals
+            string patnID = lblPatnID.Text;
+            string admit = new DirectoryInfo(fn).Name;
+            System.Diagnostics.Debug.Print("@ParseAnneals:{0} (admit folder path), patnID={1}, admit={2}",
+                fn, patnID, admit);
+            //
+            AddLogMessage($"ParseAnneals(0): {patnID}_{admit}.");
 
-
-
+            //[Step 1] backup whole folder first
+            string fnBak = fn + "_bak";
+            BackupFolder(fn, fnBak);
+            //[Step 2] Anneal files: last annealed first
+            for (int i = annealList.Count - 1; i >= 0; i--)
+            {
+                string fTarget = annealList[i];
+                int ct = i + 1;
+                ParseAnnealFolders(fn, admit, fTarget, ct);
+            }
+            AddLogMessage($"Completed!!");
+        }
+        private void ParseAnnealFolders(string fn, string admit, string target, int ct)
+        {
+            //[Step 1] check current folder and create before/after
+            bool isLast = false;
+            string fnPrvBefore = $"{fn}_{ct+1}_before";
+            string fnCurBefore = $"{fn}_{ct}_before";
+            isLast = (!Directory.Exists(fnPrvBefore));
+            //
+            string fnAfter = $"{fn}_{ct}_after";
+            /*//create patn_n_after folder
+            if(isLast)
+                BackupFolder(fn, fnAfter);
+            else
+                BackupFolder(fnPrvBefore, fnAfter);*/
+            //
+            if (isLast)
+                BackupFolder($"{fn}_bak", fnCurBefore);
+            else
+                BackupFolder(fnPrvBefore, fnCurBefore);
+            //
+            //[Step 2] recover annealed files
+            if (Directory.Exists(fnCurBefore))
+            {
+                int ctAnneal = CalculateAnnealCountByPattern(target, fnCurBefore);
+                //Remove origin (*.vts) files
+                string patternDelete = $"{target}.vts.*";
+                string[] filePaths = Directory.GetFiles(fnCurBefore, patternDelete);
+                foreach (string fPath in filePaths)
+                {
+                    File.Delete(fPath);
+                }
+                //Rename (~{ctAnneal}vts*) to origin (*.vts*)
+                string n = (ctAnneal == 0) ? ("") : (ctAnneal.ToString());
+                string patternRename = $"{target}.~{n}vts*";
+                string[] filesToRename = Directory.GetFiles(fnCurBefore, patternRename);
+                foreach (string fPath in filesToRename)
+                {
+                    string ext = ".vts";
+                    string ori = $".~{n}vts";
+                    string fDest = fPath.Replace(ori, ext);
+                    File.Copy(fPath, fDest);
+                    File.Delete(fPath);
+                }
+            }
+            //
+            AddLogMessage($"ParseAnnealFolders: {admit}_{ct} recovered!");
+        }
+        private void BackupFolder(string oriFolder, string destFolder)
+        {
+            if (!Directory.Exists(oriFolder))
+            {
+                AddLogMessage($"BackupFolder(fail 0): {oriFolder} not exist!");
+                return;
+            }
+            string fileName = "", destFile = "";
+            Directory.CreateDirectory(destFolder);
+            if (Directory.Exists(oriFolder))
+            {
+                string[] files = Directory.GetFiles(oriFolder);
+                // Copy the files and overwrite destination files if they already exist.
+                foreach (string s in files)
+                {
+                    // Use static Path methods to extract only the file name from the path.
+                    fileName = Path.GetFileName(s);
+                    destFile = Path.Combine(destFolder, fileName);
+                    File.Copy(s, destFile, true);
+                }
+            }
+            else
+            {
+                AddLogMessage($"ParseAnneals(fail 1): {fileName} not exist!");
+            }
+            System.Diagnostics.Debug.Print($"ParseAnneals: {Path.GetDirectoryName(destFolder)} backup!");
+            //AddLogMessage($"ParseAnneals: {destFolder} backup!");
         }
         private KeyValuePair<string, string> GetCmbSelectedKeyValue(ComboBox comboBox)
         {
@@ -87,12 +225,6 @@ namespace AnnealFileRecovery
                 return new KeyValuePair<string, string>();
             KeyValuePair<string, string> kvp = (KeyValuePair<string, string>)comboBox.Items[comboBox.SelectedIndex];
             return kvp;
-        }
-        private void GetAnnealCountFromTargetFile()
-        {
-
-
-
         }
         private void UpdateInfo(string path)
         {
@@ -103,7 +235,7 @@ namespace AnnealFileRecovery
             System.Diagnostics.Debug.Print("txtPath.Text={0} => dir={1}, patnID={2}", txtPath.Text, dir, patnID);
         }
         //
-        private string GetNumberOfAnneals(string path = null)
+        private string GetNumberOfAdmits(string path = null)
         {
             string fn = string.Empty;
             if (string.IsNullOrEmpty(path)) return fn;
@@ -131,43 +263,34 @@ namespace AnnealFileRecovery
             AddAdmitsToComboBox(lstAdmits);
             //TODO: to select: cmbAdmit select item changed
             //if lstAdmits.Count > 1 => choose one to explore
-
-            fn = lstAdmits[0];
+            if (lstAdmits.Count > 0)
+                fn = lstAdmits[0];
             return fn;
         }
-        private int CalculateAnnealCount(string path, string admit)
+        private int CalculateAnnealCountByPattern(string pattern, string fn)
         {
-            //[Check event files and find anneal count]
-            string patnID = lblPatnID.Text;
-            string fn = path;
-            string evtOri = $"{fn}\\{patnID}_{admit}.event";
-            //
-            int n = 0;
-            bool exists = (File.Exists(evtOri));
-            while (exists)
+            //[Check vts files only]
+            int ct = 0;
+            bool isFound = false;
+            if (Directory.Exists(fn))
             {
-                string idx = (n == 0) ? ("") : (n.ToString());
-                string evt = $"{fn}\\{patnID}_{admit}.~{idx}event";
-                if (File.Exists(evt))
+                while (!isFound)
                 {
-                    System.Diagnostics.Debug.Print("Exists={0}, n={1}", evt, n);
-                    n++;
-                }
-                else
-                {
-                    exists = false;
+                    string target = (ct == 0) ? ($"{pattern}.~vts") : ($"{pattern}.~{ct.ToString()}vts");
+                    string[] files = Directory.GetFiles(fn, target);
+                    if (files.Length > 0) ct++;
+                    else isFound = true;
                 }
             }
-            System.Diagnostics.Debug.Print("CalculateAnnealCount={0}",n);
-            return (n);
+            return (ct-1);
         }
         private void AddAdmitsToComboBox(List<string> lst)
         {
             if (cmbAdmit == null) return;
+            cmbAdmit.SelectedIndex = -1;
+            cmbAdmit.Items.Clear();
             if (lst == null || lst.Count == 0)
             {
-                cmbAdmit.SelectedIndex = -1;
-                cmbAdmit.Items.Clear();
                 return;
             }
             //
@@ -218,8 +341,11 @@ namespace AnnealFileRecovery
         private List<string> GetAnnealedFilesFromTarget(string fn)
         {
             List<string> lst = new List<string>();
-            if (!File.Exists(fn)) return lst;
-            //
+            if (!File.Exists(fn))
+            {
+                AddLogMessage($"GetAnnealedFilesFromTarget: {fn} not exists.");
+                return lst;
+            }//
             try
             {
                 using (FileStream fs = new FileStream(fn, FileMode.Open))
@@ -237,6 +363,7 @@ namespace AnnealFileRecovery
                         catch (Exception ex)
                         {
                             System.Diagnostics.Debug.Print("file reading exception:" + ex);
+                            AddLogMessage($"GetAnnealedFilesFromTarget (ex 1): {ex}.");
                             return lst;
                         }
                     }
@@ -245,10 +372,21 @@ namespace AnnealFileRecovery
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.Print("file reading exception:" + ex);
+                AddLogMessage($"GetAnnealedFilesFromTarget (ex 2): {ex}.");
                 return lst;
             }
+            AddLogMessage($"GetAnnealedFilesFromTarget: count={lst.Count}.");
             return lst;
         }
+        //[Log]
+        private void AddLogMessage(string str)
+        {
+            if (txtLog == null) return;
+            txtLog.AppendText("- " + str + "\n");
+        }
+        private void txtLog_TextChanged(object sender, EventArgs e)
+        {
 
+        }
     }
 }

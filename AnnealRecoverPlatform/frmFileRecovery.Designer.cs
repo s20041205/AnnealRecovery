@@ -35,6 +35,7 @@
             this.lblPatnID = new System.Windows.Forms.Label();
             this.cmbAdmit = new System.Windows.Forms.ComboBox();
             this.lblAdmit = new System.Windows.Forms.Label();
+            this.txtLog = new System.Windows.Forms.RichTextBox();
             this.SuspendLayout();
             // 
             // btnFolderPath
@@ -56,7 +57,7 @@
             // 
             // btnRun
             // 
-            this.btnRun.Location = new System.Drawing.Point(263, 88);
+            this.btnRun.Location = new System.Drawing.Point(263, 86);
             this.btnRun.Name = "btnRun";
             this.btnRun.Size = new System.Drawing.Size(54, 23);
             this.btnRun.TabIndex = 2;
@@ -99,11 +100,25 @@
             this.lblAdmit.TabIndex = 6;
             this.lblAdmit.Text = "Time Admit:";
             // 
+            // txtLog
+            // 
+            this.txtLog.AutoWordSelection = true;
+            this.txtLog.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            this.txtLog.Location = new System.Drawing.Point(12, 117);
+            this.txtLog.Name = "txtLog";
+            this.txtLog.ReadOnly = true;
+            this.txtLog.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
+            this.txtLog.Size = new System.Drawing.Size(305, 104);
+            this.txtLog.TabIndex = 7;
+            this.txtLog.Text = "";
+            this.txtLog.TextChanged += new System.EventHandler(this.txtLog_TextChanged);
+            // 
             // frmFileRecovery
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(329, 233);
+            this.Controls.Add(this.txtLog);
             this.Controls.Add(this.lblAdmit);
             this.Controls.Add(this.cmbAdmit);
             this.Controls.Add(this.lblPatnID);
@@ -129,6 +144,7 @@
         private System.Windows.Forms.Label lblPatnID;
         private System.Windows.Forms.ComboBox cmbAdmit;
         private System.Windows.Forms.Label lblAdmit;
+        private System.Windows.Forms.RichTextBox txtLog;
     }
 }
 
