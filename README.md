@@ -5,8 +5,6 @@
 → user ID and subfolder listed
 → change subfolder if needed
 
-2. Anneal count displayed
-
-3. Click "Recover" to execute anneal file recovering
+2. Click "Recover" to execute anneal file recovering
 
 ![Platform](https://github.com/s20041205/AnnealFileRecovery/blob/master/Debug/img/overview.png)
